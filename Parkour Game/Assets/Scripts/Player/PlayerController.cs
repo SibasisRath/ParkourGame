@@ -22,11 +22,29 @@ public class PlayerController : MonoBehaviour
     private float horizontalInput;
     private float verticalInput;
 
+    private bool hasControl = true;
+
+    public bool IsGrounded()
+    {
+        return isGrounded;
+    }
+
+    public bool IsMovingForward()
+    {
+        return moveAmount != 0;
+    }
+
     private void FixedUpdate()
     {        
         moveAmount = Mathf.Clamp01(Mathf.Abs(horizontalInput) + Mathf.Abs(verticalInput));
         moveInput = (new Vector3(horizontalInput, 0, verticalInput)).normalized;
         moveDir = camController.PlannerRotation * moveInput;
+
+        if (!hasControl)
+        {
+            return;
+        }
+
         GroundChexk();
 
         if (isGrounded)
@@ -35,7 +53,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            ySpeed = Physics.gravity.y;
+            ySpeed += Physics.gravity.y * Time.deltaTime;
         }
 
         Vector3 velocity = moveDir * Time.deltaTime;
@@ -44,6 +62,11 @@ public class PlayerController : MonoBehaviour
     }
     private void Update()
     {
+        if (!hasControl)
+        {
+            return;
+        }
+
         horizontalInput = Input.GetAxis("Horizontal");
         verticalInput = Input.GetAxis("Vertical");
       
@@ -62,6 +85,18 @@ public class PlayerController : MonoBehaviour
     {
         isGrounded = Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadious, groundLayer);
     }
+
+    public void SetControl(bool hasControl)
+    {
+        this.hasControl = hasControl;
+        this.characterController.enabled = hasControl;
+        if (!hasControl)
+        {
+            animator.SetFloat("MoveAmount", 0f);
+            targetRotation = transform.rotation;
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;
