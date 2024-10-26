@@ -604,8 +604,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1008401399}
+  - component: {fileID: 1008401405}
   - component: {fileID: 1008401400}
-  - component: {fileID: 1008401401}
   - component: {fileID: 1008401402}
   - component: {fileID: 1008401404}
   - component: {fileID: 1008401403}
@@ -647,34 +647,13 @@ MonoBehaviour:
   moveSpeed: 10
   rotationSpeed: 1000
   camController: {fileID: 874691310}
-  animator: {fileID: 1008401401}
+  animator: {fileID: 1008401405}
   characterController: {fileID: 1008401402}
   groundCheckRadious: 0.2
   groundCheckOffset: {x: 0, y: 0.1, z: 0.1}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
---- !u!95 &1008401401
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1008401398}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: f711e129cee28774cbae960fdc74dd2c, type: 3}
-  m_Controller: {fileID: 9100000, guid: 298adf84614d6984689859c4f56cd3f7, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 1
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!143 &1008401402
 CharacterController:
   m_ObjectHideFlags: 0
@@ -739,7 +718,28 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e7f2da303958a0346845b2d85e4c76ef, type: 2}
   envScanner: {fileID: 1008401403}
   playerController: {fileID: 1008401400}
-  animator: {fileID: 1008401401}
+  animator: {fileID: 1008401405}
+--- !u!95 &1008401405
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008401398}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: f711e129cee28774cbae960fdc74dd2c, type: 3}
+  m_Controller: {fileID: 9100000, guid: 7c1b4de2460498a42bf720315cb7a799, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1143755503
 GameObject:
   m_ObjectHideFlags: 0

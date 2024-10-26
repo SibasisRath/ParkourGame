@@ -34,7 +34,7 @@ public class EnvironmentScanner : MonoBehaviour
 
             Debug.DrawRay(heightOrigin, Vector3.down * heightRayLength, (obstacleHitData.heightHitFound) ? Color.green : Color.red);
         }
-        else
+       /* else
         {
             upwardOrigin = transform.position + upwardRayOffset;
             obstacleHitData.upwardHitFound = Physics.Raycast(upwardOrigin,
@@ -42,7 +42,7 @@ public class EnvironmentScanner : MonoBehaviour
                 heightRayLength, obstacleLayer);
 
             Debug.DrawRay(upwardOrigin, Vector3.up * heightRayLength, (obstacleHitData.upwardHitFound) ? Color.green : Color.red);
-        }
+        }*/
     }
 }
 
