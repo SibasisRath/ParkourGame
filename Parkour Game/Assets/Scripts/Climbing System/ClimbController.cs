@@ -38,8 +38,6 @@ public class ClimbController : MonoBehaviour
                     playerController.SetControl(false);
                     StartCoroutine(JumpToLedge("DropToHang", currentPoint.transform, 0.50f, 0.75f, handOffset: new Vector3(0.25f, 0.2f, -0.2f)));
                 }
-
-
             }
         }
         else

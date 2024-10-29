@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnvironmentScanner : MonoBehaviour
@@ -64,12 +65,12 @@ public class EnvironmentScanner : MonoBehaviour
         ledgeHit = new RaycastHit();
 
         var origin = transform.position + Vector3.down * 0.1f + transform.forward * 2f;
-
         if (Physics.Raycast(origin, -transform.forward, out RaycastHit hit, 3, climbLedgeLayer))
         {
             ledgeHit = hit;
             return true;
         }
+
 
         return false;
     }

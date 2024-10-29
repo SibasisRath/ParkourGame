@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -15,7 +13,6 @@ public class PlayerController : MonoBehaviour
 
     bool isGrounded;
     bool hasControl = true;
-
     public bool InAction { get; private set; }
     public bool IsHanging { get; set; }
 
@@ -28,6 +25,12 @@ public class PlayerController : MonoBehaviour
 
     float ySpeed;
     Quaternion targetRotation;
+
+    [SerializeField] float dashSpeedMultiplier = 2f;
+    [SerializeField] float dashCooldown = 1f; // Cooldown in seconds
+
+    private bool isDashing = false;
+    private float lastDashTime = -Mathf.Infinity;
 
     CameraController cameraController;
     Animator animator;
@@ -65,9 +68,16 @@ public class PlayerController : MonoBehaviour
         animator.SetBool("isGrounded", isGrounded);
         if (isGrounded)
         {
+            if (Input.GetMouseButtonDown(1) && !isDashing && (Time.time >= lastDashTime + dashCooldown))
+            {
+                StartCoroutine(Dash());
+            }
             Collider[] ground = new Collider[1];
             Physics.OverlapSphereNonAlloc(transform.TransformPoint(groundCheckOffset), groundCheckRadius, ground, groundLayer);
-            transform.SetParent(ground[0].transform);
+
+            //transform.SetParent(ground[0].transform);
+            
+            
             ySpeed = -0.5f;
             velocity = desiredMoveDir * moveSpeed;
 
@@ -77,8 +87,8 @@ public class PlayerController : MonoBehaviour
                 LedgeData = ledgeData;
                 LedgeMovement();
             }
-
             animator.SetFloat("moveAmount", velocity.magnitude / moveSpeed, 0.2f, Time.deltaTime);
+
         }
         else
         {
@@ -106,6 +116,22 @@ public class PlayerController : MonoBehaviour
     void GroundCheck()
     {
         isGrounded = Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius, groundLayer);
+    }
+
+    private IEnumerator Dash()
+    {
+        isDashing = true;
+        lastDashTime = Time.time;
+
+        float originalSpeed = moveSpeed;
+        moveSpeed *= dashSpeedMultiplier;
+
+        animator.CrossFadeInFixedTime("Dash", 0.2f);
+
+        yield return new WaitForSeconds(animator.GetCurrentAnimatorStateInfo(0).length);
+
+        moveSpeed = originalSpeed;
+        isDashing = false;
     }
 
     void LedgeMovement()
