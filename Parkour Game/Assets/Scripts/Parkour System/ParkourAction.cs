@@ -1,123 +1,82 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "ParkourSystem/NewParkourAction")]
+[CreateAssetMenu(menuName = "Parkour System/New parkour action")]
 public class ParkourAction : ScriptableObject
 {
-    [SerializeField] private string animationName;
-    [SerializeField] private string obstacleTag;
-    [SerializeField] private float minHeight;
-    [SerializeField] private float maxHeight;
-    [SerializeField] private float postActionDelay = 0f;
+    [SerializeField] string animName;
+    [SerializeField] string obstacleTag;
+
+    [SerializeField] float minHeight;
+    [SerializeField] float maxHeight;
+
+    [SerializeField] bool rotateToObstacle;
+    [SerializeField] float postActionDelay;
 
     [Header("Target Matching")]
-    [SerializeField] private bool enableTargetMatching = true;
-    [SerializeField] protected List<TargetMatchingBodyPart> targetMatchingBodyParts;
+    [SerializeField] bool enableTargetMatching = true;
+    [SerializeField] protected AvatarTarget matchBodyPart;
+    [SerializeField] float matchStartTime;
+    [SerializeField] float matchTargetTime;
+    [SerializeField] Vector3 matchPosWeight = new (0, 1, 0);
 
-    public bool Mirror;
+    public Quaternion TargetRotation { get; set; }
+    public Vector3 MatchPos { get; set; }
+    public bool Mirror { get; set; }
 
-    protected Transform CurrentObstacleTransform { get; set; }
-    protected Vector3 MatchPositionHeight { get; set; }
-    protected Vector3 MatchPositionForward { get; set; }
-
-    public Vector3 MatchPosition(TargetMatchingBodyPart targetMatchingBodyPart)
+    public virtual bool CheckIfPossible(ObstacleHitData hitData, Transform player)
     {
-        Vector3 position;
+        // Check Tag
+        if (!string.IsNullOrEmpty(obstacleTag) && !hitData.forwardHit.transform.CompareTag(obstacleTag))
+            return false;
 
-        // Get the base position first
-        if (targetMatchingBodyPart.shouldMatchHeight)
+        // Height Tag
+        float height = hitData.heightHit.point.y - player.position.y;
+        if (height < minHeight || height > maxHeight)
+            return false;
+
+        if (rotateToObstacle)
+            TargetRotation = Quaternion.LookRotation(-hitData.forwardHit.normal);
+
+        if (enableTargetMatching)
+            MatchPos = hitData.heightHit.point;
+
+        return true;
+    }
+
+    public AvatarTarget MirroringTargetBodyParts(AvatarTarget bp)
+    {
+        if (bp == AvatarTarget.LeftHand)
         {
-            position = MatchPositionHeight;
+            return AvatarTarget.RightHand;
         }
-        else if (targetMatchingBodyPart.shouldMatchForward)
+
+        else if (bp == AvatarTarget.RightHand)
         {
-            position = MatchPositionForward;
+            return AvatarTarget.LeftHand;
+        }
+
+        if (bp == AvatarTarget.LeftFoot)
+        {
+            return AvatarTarget.RightFoot;
+        }
+
+        else if (bp == AvatarTarget.RightFoot)
+        {
+            return AvatarTarget.LeftFoot;
         }
         else
         {
-            return Vector3.one;
-        }
-
-
-        // If mirroring is needed and we have a valid transform
-        if (Mirror && CurrentObstacleTransform != null)
-        {
-            // Transform to obstacle's local space
-            Vector3 localPos = CurrentObstacleTransform.InverseTransformPoint(position);
-
-            // Mirror only the X coordinate in local space
-            // Keep Z coordinate unchanged to maintain proper forward/backward positioning
-            localPos = new Vector3(-localPos.x, localPos.y, localPos.z);
-
-            // Transform back to world space
-            return CurrentObstacleTransform.TransformPoint(localPos);
-        }
-
-        return position;
-    }
-
-    public virtual bool CheckIfPossible(ObstacleHitData obstacleHitData, Transform player)
-    {
-
-        if (!string.IsNullOrEmpty(obstacleTag) && !obstacleHitData.forwardHit.transform.CompareTag(obstacleTag))
-        {
-            return false;
-        }
-
-        float height = obstacleHitData.heightHit.point.y - player.position.y;
-
-        if (enableTargetMatching) 
-        {
-            CurrentObstacleTransform = obstacleHitData.forwardHit.transform;
-            MatchPositionHeight = obstacleHitData.heightHit.point;
-            MatchPositionForward = obstacleHitData.forwardHit.point;
-        }
-
-        return height > minHeight && height < maxHeight;
-    }
-
-    public void MirroringTargetBodyParts()
-    {
-        foreach (var bp in targetMatchingBodyParts)
-        {
-            if (bp.matchBodyPart == AvatarTarget.LeftHand)
-            {
-                bp.matchBodyPart = AvatarTarget.RightHand;
-            }
-
-            else if (bp.matchBodyPart == AvatarTarget.RightHand)
-            {
-                bp.matchBodyPart = AvatarTarget.LeftHand;
-            }
-
-            if (bp.matchBodyPart == AvatarTarget.LeftFoot)
-            {
-                bp.matchBodyPart = AvatarTarget.RightFoot;
-            }
-
-            else if (bp.matchBodyPart == AvatarTarget.RightFoot)
-            {
-                bp.matchBodyPart = AvatarTarget.LeftFoot;
-            }
-
+            return bp;
         }
     }
-    public string AnimationName => animationName;
 
+    public string AnimName => animName;
+    public bool RotateToObstacle => rotateToObstacle;
+    public float PostActionDelay => postActionDelay;
 
     public bool EnableTargetMatching => enableTargetMatching;
-    public List<TargetMatchingBodyPart> TargetMatchingBodyParts => targetMatchingBodyParts;
-    public float PostActionDelay => postActionDelay;
-}
-
-[System.Serializable]
-public class TargetMatchingBodyPart
-{
-    public AvatarTarget matchBodyPart; // Made fields public to be accessible in the Inspector
-    public float matchStartTime;
-    public float matchTargetTime;
-    public Vector3 matchPositionWeight = new (0,1,0);
-    public bool shouldMatchHeight = true;
-    public bool shouldMatchForward = false;
+    public AvatarTarget MatchBodyPart => matchBodyPart;
+    public float MatchStartTime => matchStartTime;
+    public float MatchTargetTime => matchTargetTime;
+    public Vector3 MatchPosWeight => matchPosWeight;
 }
