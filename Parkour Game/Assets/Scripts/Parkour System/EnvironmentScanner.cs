@@ -37,7 +37,7 @@ public class EnvironmentScanner : MonoBehaviour
         return hitData;
     }
 
-    public bool ClimbLedgeCheck(Vector3 dir, out RaycastHit ledgeHit)
+    public bool ClimbLedgeCheck(Vector3 dir, out RaycastHit ledgeHit, string tag = "")
     {
         ledgeHit = new RaycastHit();
 
@@ -50,7 +50,8 @@ public class EnvironmentScanner : MonoBehaviour
         for (int i = 0; i < 10; i++)
         {
             Debug.DrawRay(origin + offset * i, dir);
-            if (Physics.Raycast(origin + offset * i, dir, out RaycastHit hit, climbLedgeRayLength, climbLedgeLayer))
+            if (Physics.Raycast(origin + offset * i, dir, out RaycastHit hit, climbLedgeRayLength, climbLedgeLayer)
+                && hit.transform.CompareTag(tag))
             {
                 ledgeHit = hit;
                 return true;

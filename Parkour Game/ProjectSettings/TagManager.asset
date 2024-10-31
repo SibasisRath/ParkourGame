@@ -8,6 +8,8 @@ TagManager:
   - Window
   - Ground
   - Rope
+  - Wall
+  - Ledge
   layers:
   - Default
   - TransparentFX
@@ -17,7 +19,7 @@ TagManager:
   - UI
   - Obstacles
   - ClimbLedge
-  - 
+  - Rope
   - 
   - 
   - 
