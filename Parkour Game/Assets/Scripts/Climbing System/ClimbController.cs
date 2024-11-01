@@ -1,13 +1,13 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ClimbController : MonoBehaviour
 {
-    ClimbPoint currentPoint;
+    private ClimbPoint currentPoint;
 
-    PlayerController playerController;
-    EnvironmentScanner envScanner;
+    private PlayerController playerController;
+    private EnvironmentScanner envScanner;
+    private string currentClimbObjectTag = string.Empty;
     private void Awake()
     {
         playerController = GetComponent<PlayerController>();
@@ -20,12 +20,20 @@ public class ClimbController : MonoBehaviour
         {
             if (Input.GetButton("Jump") && !playerController.InAction)
             {
-                if (envScanner.ClimbLedgeCheck(transform.forward, out RaycastHit ledgeHit))
+                if (envScanner.ClimbLedgeCheck(transform.forward, out RaycastHit ledgeHit, "Ledge"))
                 {
+                    currentClimbObjectTag = "Ledge";
                     currentPoint = GetNearestClimbPoint(ledgeHit.transform, ledgeHit.point);
 
                     playerController.SetControl(false);
                     StartCoroutine(JumpToLedge("IdleToHang", currentPoint.transform, 0.41f, 0.54f));
+                }
+                else if (envScanner.ClimbLedgeCheck(transform.forward, out RaycastHit ropeHit, "Rope"))
+                {
+                    currentClimbObjectTag = "Rope";
+                    currentPoint = GetNearestClimbPoint(ropeHit.transform, ropeHit.point);
+                    playerController.SetControl(false);
+                    StartCoroutine(JumpToLedge("StandToFreehang", currentPoint.transform, 0.41f, 0.54f, handOffset: new Vector3(0.25f, 0f, 0.1f)));
                 }
             }
 
@@ -33,15 +41,17 @@ public class ClimbController : MonoBehaviour
             {
                 if (envScanner.DropLedgeCheck(out RaycastHit ledgeHit))
                 {
+                    currentClimbObjectTag = "Ledge";
                     currentPoint = GetNearestClimbPoint(ledgeHit.transform, ledgeHit.point);
 
                     playerController.SetControl(false);
-                    StartCoroutine(JumpToLedge("DropToHang", currentPoint.transform, 0.50f, 0.75f, handOffset: new Vector3(0.25f, 0.2f, -0.2f)));
+                    StartCoroutine(JumpToLedge("DropToHang", currentPoint.transform, 0.50f, 0.75f, handOffset: new Vector3(0.25f, 0.2f, -0.2f)));           
                 }
             }
         }
         else
         {
+            
             if (Input.GetButton("Drop") && !playerController.InAction)
             {
                 StartCoroutine(JumpFromHang());
@@ -80,11 +90,21 @@ public class ClimbController : MonoBehaviour
             else if (neighbour.connectionType == ConnectionType.Move)
             {
                 currentPoint = neighbour.point;
+                if (currentClimbObjectTag == "Ledge")
+                {
+                    if (neighbour.direction.x == 1)
+                        StartCoroutine(JumpToLedge("ShimmyRight", currentPoint.transform, 0f, 0.38f, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
+                    else if (neighbour.direction.x == -1)
+                        StartCoroutine(JumpToLedge("ShimmyLeft", currentPoint.transform, 0f, 0.38f, AvatarTarget.LeftHand, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
+                }
+                else if (currentClimbObjectTag == "Rope")
+                {
+                    if (neighbour.direction.x == 1)
+                        StartCoroutine(JumpToLedge("FreeRightShimmy", currentPoint.transform, 0f, 0.38f, handOffset: new Vector3(0.25f, 0f, 0.1f)));
+                    else if (neighbour.direction.x == -1)
+                        StartCoroutine(JumpToLedge("FreeLeftShimmy", currentPoint.transform, 0f, 0.38f, AvatarTarget.LeftHand, handOffset: new Vector3(0.25f, 0f, 0.1f)));
+                }
 
-                if (neighbour.direction.x == 1)
-                    StartCoroutine(JumpToLedge("ShimmyRight", currentPoint.transform, 0f, 0.38f, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
-                else if (neighbour.direction.x == -1)
-                    StartCoroutine(JumpToLedge("ShimmyLeft", currentPoint.transform, 0f, 0.38f, AvatarTarget.LeftHand, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
             }
         }
     }
@@ -120,7 +140,15 @@ public class ClimbController : MonoBehaviour
     IEnumerator JumpFromHang()
     {
         playerController.IsHanging = false;
-        yield return playerController.DoAction("JumpFromHang");
+        if (currentClimbObjectTag == "Rope")
+        {
+            yield return playerController.DoAction("FreehangDrop");
+        }
+        else
+        {
+            yield return playerController.DoAction("JumpFromHang");
+        } 
+
 
         playerController.ResetTargetRotation();
         playerController.SetControl(true);
