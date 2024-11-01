@@ -100,9 +100,9 @@ public class ClimbController : MonoBehaviour
                 else if (currentClimbObjectTag == "Rope")
                 {
                     if (neighbour.direction.x == 1)
-                        StartCoroutine(JumpToLedge("FreeRightShimmy", currentPoint.transform, 0f, 0.38f, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
+                        StartCoroutine(JumpToLedge("FreeRightShimmy", currentPoint.transform, 0f, 0.38f, handOffset: new Vector3(0.25f, 0f, 0.1f)));
                     else if (neighbour.direction.x == -1)
-                        StartCoroutine(JumpToLedge("FreeLeftShimmy", currentPoint.transform, 0f, 0.38f, AvatarTarget.LeftHand, handOffset: new Vector3(0.25f, 0.05f, 0.1f)));
+                        StartCoroutine(JumpToLedge("FreeLeftShimmy", currentPoint.transform, 0f, 0.38f, AvatarTarget.LeftHand, handOffset: new Vector3(0.25f, 0f, 0.1f)));
                 }
 
             }
