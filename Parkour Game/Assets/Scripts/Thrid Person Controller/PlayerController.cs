@@ -3,57 +3,60 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float moveSpeed = 5f;
-    [SerializeField] float rotationSpeed = 500f;
+    private const float GroundedYSpeed = -0.5f;
+    private const float FixedTransitionDampDuration = 0.2f;
+    private const float TransitionTimerOffSet = 0.5f;
+    private const int FallTimeVelocityReducer = 2;
+    private const float MaxMoveValueRequiredForTragetRotation = 0.2f;
+    private const int LedgeMovementAngleOffset = 80;
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 500f;
 
     [Header("Ground Check Settings")]
-    [SerializeField] float groundCheckRadius = 0.2f;
-    [SerializeField] Vector3 groundCheckOffset;
-    [SerializeField] LayerMask groundLayer;
+    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private Vector3 groundCheckOffset;
+    [SerializeField] private LayerMask groundLayer;
 
-    bool isGrounded;
-    bool hasControl = true;
+    private bool isGrounded;
+    private bool hasControl = true;
     public bool InAction { get; private set; }
     public bool IsHanging { get; set; }
 
-    Vector3 desiredMoveDir;
-    Vector3 moveDir;
-    Vector3 velocity;
+    private Vector3 desiredMoveDir;
+    private Vector3 moveDir;
+    private Vector3 velocity;
 
     public bool IsOnLedge { get; set; }
     public LedgeData LedgeData { get; set; }
 
-    float ySpeed;
-    Quaternion targetRotation;
+    private float ySpeed;
+    private Quaternion targetRotation;
 
-    [SerializeField] float dashSpeedMultiplier = 2f;
-    [SerializeField] float dashCooldown = 1f; // Cooldown in seconds
+    [SerializeField] private float dashSpeedMultiplier = 2f;
+    [SerializeField] private float dashCooldown = 1f; // Cooldown in seconds
+
 
     private bool isDashing = false;
     private float lastDashTime = -Mathf.Infinity;
 
-    CameraController cameraController;
-    Animator animator;
-    CharacterController characterController;
-    EnvironmentScanner environmentScanner;
+    [SerializeField] private CameraController cameraController;
+    [SerializeField] private Animator animator;
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private EnvironmentScanner environmentScanner;
     private void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        cameraController = Camera.main.GetComponent<CameraController>();
-        animator = GetComponent<Animator>();
-        characterController = GetComponent<CharacterController>();
-        environmentScanner = GetComponent<EnvironmentScanner>();
     }
 
     private void Update()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
 
-        float moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
+        float moveAmount = Mathf.Clamp01(Mathf.Abs(horizontalInput) + Mathf.Abs(verticalInput));
 
-        var moveInput = (new Vector3(h, 0, v)).normalized;
+        var moveInput = (new Vector3(horizontalInput, 0, verticalInput)).normalized;
 
         desiredMoveDir = cameraController.PlanarRotation * moveInput;
         moveDir = desiredMoveDir;
@@ -78,7 +81,7 @@ public class PlayerController : MonoBehaviour
             //transform.SetParent(ground[0].transform);
             
             
-            ySpeed = -0.5f;
+            ySpeed = GroundedYSpeed;
             velocity = desiredMoveDir * moveSpeed;
 
             IsOnLedge = environmentScanner.ObstacleLedgeCheck(desiredMoveDir, out LedgeData ledgeData);
@@ -87,14 +90,14 @@ public class PlayerController : MonoBehaviour
                 LedgeData = ledgeData;
                 LedgeMovement();
             }
-            animator.SetFloat("moveAmount", velocity.magnitude / moveSpeed, 0.2f, Time.deltaTime);
+            animator.SetFloat("moveAmount", velocity.magnitude / moveSpeed, FixedTransitionDampDuration, Time.deltaTime);
 
         }
         else
         {
             ySpeed += Physics.gravity.y * Time.deltaTime;
 
-            velocity = transform.forward * moveSpeed / 2;
+            velocity = transform.forward * moveSpeed / FallTimeVelocityReducer; 
         }
 
 
@@ -102,7 +105,7 @@ public class PlayerController : MonoBehaviour
 
         if(characterController.enabled) characterController.Move(velocity * Time.deltaTime);
 
-        if (moveAmount > 0 && moveDir.magnitude > 0.2f)
+        if (moveAmount > 0 && moveDir.magnitude > MaxMoveValueRequiredForTragetRotation)
         {
             targetRotation = Quaternion.LookRotation(moveDir);
         }
@@ -113,7 +116,7 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    void GroundCheck()
+    private void GroundCheck()
     {
         isGrounded = Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius, groundLayer);
     }
@@ -126,7 +129,7 @@ public class PlayerController : MonoBehaviour
         float originalSpeed = moveSpeed;
         moveSpeed *= dashSpeedMultiplier;
 
-        animator.CrossFadeInFixedTime("Dash", 0.2f);
+        animator.CrossFadeInFixedTime("Dash", FixedTransitionDampDuration);
 
         yield return new WaitForSeconds(animator.GetCurrentAnimatorStateInfo(0).length);
 
@@ -139,7 +142,7 @@ public class PlayerController : MonoBehaviour
         float signedAngle = Vector3.SignedAngle(LedgeData.surfaceHit.normal, desiredMoveDir, Vector3.up);
         float angle = Mathf.Abs(signedAngle);
 
-        if (Vector3.Angle(desiredMoveDir, transform.forward) >= 80)
+        if (Vector3.Angle(desiredMoveDir, transform.forward) >= LedgeMovementAngleOffset)
         {
             // Don't move, but rotate
             velocity = Vector3.zero;
@@ -169,7 +172,7 @@ public class PlayerController : MonoBehaviour
     {
         InAction = true;
         animator.SetBool("mirrorAction", mirror);
-        animator.CrossFadeInFixedTime(animName, 0.2f);
+        animator.CrossFadeInFixedTime(animName, FixedTransitionDampDuration);
         yield return null;
 
         var animState = animator.GetNextAnimatorStateInfo(0);
@@ -190,7 +193,7 @@ public class PlayerController : MonoBehaviour
             if (matchParams != null)
                 MatchTarget(matchParams);
 
-            if (animator.IsInTransition(0) && timer > 0.5f)
+            if (animator.IsInTransition(0) && timer > TransitionTimerOffSet)
                 break;
 
             yield return null;
@@ -239,11 +242,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = new Color(0, 1, 0, 0.5f);
+        Gizmos.color = Color.green;
         Gizmos.DrawSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius);
     }
 
-    public float RotationSpeed => rotationSpeed;
+   // public float RotationSpeed => rotationSpeed;
 }
 
 public class MatchTargetParams

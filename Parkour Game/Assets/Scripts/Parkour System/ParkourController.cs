@@ -4,17 +4,12 @@ using UnityEngine;
 
 public class ParkourController : MonoBehaviour
 {
-    [SerializeField] List<ParkourAction> parkourActions;
-    [SerializeField] ParkourAction jumpDownAction;
-    [SerializeField] float autoDropHeightLimit = 1f;
+    [SerializeField] private List<ParkourAction> parkourActions;
+    [SerializeField] private ParkourAction jumpDownAction;
+    [SerializeField] private float autoDropHeightLimit = 1f;
 
-    EnvironmentScanner environmentScanner;
-    PlayerController playerController;
-    private void Awake()
-    {
-        environmentScanner = GetComponent<EnvironmentScanner>();
-        playerController = GetComponent<PlayerController>();
-    }
+    [SerializeField] private EnvironmentScanner environmentScanner;
+    [SerializeField] private PlayerController playerController;
 
     private void Update()
     {
