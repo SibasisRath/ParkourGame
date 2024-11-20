@@ -1,10 +1,8 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CameraController : MonoBehaviour
 {
-    [SerializeField] Transform followTarget;
-
+    Transform followTarget;
     [SerializeField] float rotationSpeed = 2f;
     [SerializeField] float distance = 5f;
     [SerializeField] float minDistance = 1f;
@@ -15,7 +13,6 @@ public class CameraController : MonoBehaviour
     [SerializeField] bool invertY;
 
     [SerializeField] LayerMask wallLayer;
-    [SerializeField] Image overlayImage;
 
     float rotationX;
     float rotationY;
@@ -23,20 +20,19 @@ public class CameraController : MonoBehaviour
     float invertXVal;
     float invertYVal;
 
+    private EventService eventService;
     private void Awake()
     {
         invertXVal = (invertX) ? -1 : 1;
         invertYVal = (invertY) ? -1 : 1;
     }
 
-    private void Start()
+    public void Init(PlayerView playerView)
     {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        overlayImage.enabled = true;
+        this.followTarget = playerView.transform;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         // Update rotation based on input
         rotationX += Input.GetAxis("Camera Y") * invertYVal * rotationSpeed;
@@ -44,6 +40,10 @@ public class CameraController : MonoBehaviour
 
         // Calculate target rotation and position
         Quaternion targetRotation = Quaternion.Euler(rotationX, rotationY, 0);
+        if (followTarget == null)
+        {
+            Debug.Log("no target");
+        }
         Vector3 targetPosition = followTarget.position + new Vector3(framingOffset.x, framingOffset.y);
 
         // Adjust camera distance to prevent clipping through walls
@@ -72,11 +72,4 @@ public class CameraController : MonoBehaviour
     }
 
     public Quaternion PlanarRotation => Quaternion.Euler(0, rotationY, 0);
-    public void ToggleBlueOverlay(bool enable)
-    {
-        if (overlayImage != null)
-        {
-            overlayImage.enabled = enable;
-        }
-    }
 }
