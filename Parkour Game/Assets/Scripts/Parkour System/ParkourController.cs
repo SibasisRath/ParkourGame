@@ -4,23 +4,28 @@ using UnityEngine;
 
 public class ParkourController : MonoBehaviour
 {
-    [SerializeField] List<ParkourAction> parkourActions;
-    [SerializeField] ParkourAction jumpDownAction;
-    [SerializeField] float autoDropHeightLimit = 1f;
+    [SerializeField] private List<ParkourAction> parkourActions;
+    [SerializeField] private ParkourAction jumpDownAction;
+    [SerializeField] private float autoDropHeightLimit = 1f;
 
-    EnvironmentScanner environmentScanner;
-    PlayerController playerController;
+    [SerializeField] private EnvironmentScanner environmentScanner;
+    //[SerializeField] private PlayerView playerView;
+    private PlayerController playerController;
+
+    public void SetPlayerController(PlayerController playerController) => this.playerController = playerController;
     private void Awake()
     {
-        environmentScanner = GetComponent<EnvironmentScanner>();
-        playerController = GetComponent<PlayerController>();
+        //playerController = playerView.PlayerController;
     }
-
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Time.timeScale = 0;
+        }
         var hitData = environmentScanner.ObstacleCheck();
 
-        if (Input.GetButton("Jump") && !playerController.InAction && !playerController.IsHanging)
+        if (Input.GetButton("Jump") && !playerController.PlayerModel.InAction && !playerController.PlayerModel.IsHanging)
         {
             if (hitData.forwardHitFound)
             {
@@ -35,37 +40,47 @@ public class ParkourController : MonoBehaviour
             }
         }
 
-        if (playerController.IsOnLedge && !playerController.InAction && !hitData.forwardHitFound)
+        if (playerController == null)
+        {
+            Debug.Log("no player controller. park");
+        }
+
+        if (playerController.PlayerModel == null)
+        {
+            Debug.Log("no player model. park");
+        }
+
+        if (playerController.PlayerModel.IsOnLedge && !playerController.PlayerModel.InAction && !hitData.forwardHitFound)
         {
             bool shouldJump = true;
-            if (playerController.LedgeData.height > autoDropHeightLimit && !Input.GetButton("Jump"))
+            if (playerController.PlayerModel.LedgeData.height > autoDropHeightLimit && !Input.GetButton("Jump"))
                 shouldJump = false;
 
-            if (shouldJump && playerController.LedgeData.angle <= 50)
+            if (shouldJump && playerController.PlayerModel.LedgeData.angle <= 50)
             {
-                playerController.IsOnLedge = false;
+                playerController.PlayerModel.IsOnLedge = false;
                 StartCoroutine(DoParkourAction(jumpDownAction));
             }
         }
     }
 
-    IEnumerator DoParkourAction(ParkourAction action)
+    private IEnumerator DoParkourAction(ParkourAction action)
     {
         playerController.SetControl(false);
         MatchTargetParams matchParams = null;
         if (action.EnableTargetMatching)
         {
-            matchParams = new MatchTargetParams()
-            {
-                pos = action.MatchPos,
-                bodyPart = (action.Mirror) ? action.MirroringTargetBodyParts(action.MatchBodyPart) : action.MatchBodyPart,
-                posWeight = action.MatchPosWeight,
-                startTime = action.MatchStartTime,
-                targetTime = action.MatchTargetTime
-            };
+            matchParams = new MatchTargetParams
+            (
+            position: action.MatchPos,
+            part: (action.Mirror) ? action.MirroringTargetBodyParts(action.MatchBodyPart) : action.MatchBodyPart,
+            weight: action.MatchPosWeight,
+            start: action.MatchStartTime,
+            target: action.MatchTargetTime
+            );
         }
 
-        yield return playerController.DoAction(action.AnimName, matchParams, action.TargetRotation, 
+        yield return playerController.DoAction(action.AnimName, matchParams, action.TargetRotation,
             action.RotateToObstacle, action.PostActionDelay, action.Mirror);
 
         playerController.SetControl(true);
